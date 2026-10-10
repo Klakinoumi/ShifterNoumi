@@ -30,9 +30,10 @@ recorded in the session, or with shift up and shift down swapped (Oct
 2026). It cannot tell whether the lever is in the *requested* gear when
 that gear is not recorded yet (4th recorded at the 3rd step is accepted),
 and it does not check that the neutral point is taken at rest: a lever held
-somewhere unusual (between gates) at the last step is saved as neutral. Unplugging before the ninth point discards the session;
-after that, the fix is recalibrating, or `shifternoumi-setup reset-calibration`
-if gears are too broken to enter calibration mode.
+somewhere unusual (between gates) at the last step is saved as neutral.
+Unplugging before the ninth point discards the session; after that, the fix
+is recalibrating, or `shifternoumi-setup reset-calibration` if gears are too
+broken to enter calibration mode.
 (`calibration_mode_rejects`, `calibration_store_commit`)
 
 ### Side effects of gestures
@@ -54,21 +55,25 @@ thresholds (unknown). In-game testing was done in Assetto Corsa only.
 several other generated files carry hand edits. See
 [Building and flashing → Regenerating with CubeMX](building-and-flashing.md#regenerating-with-cubemx).
 
+### Flashing from STM32CubeIDE removes the USB bootloader
+The CubeIDE project links the app at `0x08000000`, without the bootloader. See
+[Building and flashing → Flash](building-and-flashing.md#3-flash).
+
 ## USB identity
 
-The device uses ST's vendor ID `0x0483` with a product ID chosen for this
-project (`0x572C`, `usbd_desc.c`). That is fine for personal use, but a VID/PID
-pair that is not allocated to the project should not be distributed. Options:
-request a free PID from [pid.codes](https://pid.codes) (for open-source
-hardware/firmware) or ST's own programme.
+The device uses ST's vendor ID `0x0483` with product IDs chosen for this
+project (`0x572C` app, `0x572D` bootloader, `usbd_desc.c`, `Bootloader/src/usb.c`).
+That pair is not allocated to the project. The fix is a free PID from
+[pid.codes](https://pid.codes), available to open-source projects like this
+one; until then, keep it in mind if you redistribute binaries.
 
 ## For contributors
 
 ### Old captures replay with the default calibration
-Captures recorded before the `CAL` line existed have no `_cal.csv`, so
-`replay_fast_path` uses the default calibration; those taken after a
-recalibration (`test_H_pattern4/6/7`, `test_H_pattern`, `test1`,
-`test_Ben`) replay unreliably. New captures carry their calibration.
+Captures recorded before the `CAL` line existed (Sept. 2026) have no
+`_cal.csv`, so `replay_fast_path` uses the default calibration, and those
+taken after a recalibration replay unreliably. This concerns captures of the
+development archive; new captures carry their calibration.
 
 ### Dead or duplicated code
 - Slow-path gear and shift bits built by `hid_report_build` are now always
@@ -85,27 +90,9 @@ The code is commented in French (comments may refer to `PLAN.md`, the
 development journal kept in the archive repository); this documentation is
 in English.
 
-## Before publishing
-
-ShifterNoumi is under the Apache License 2.0 (Oct 2026). The repository is
-still private; before making it public:
-
-- Ask [pid.codes](https://pid.codes) for a USB PID (they require an
-  open-source license, which is now the case) instead of `0x572C`/`0x572D`
-  under ST's vendor ID.
-- ST's USB device library (`Firmware/Middlewares/`) is under ST's SLA0044
-  license (use on ST microcontrollers only), not Apache 2.0: say so where
-  the license is announced (done in the README) so nobody assumes the whole
-  tree is Apache.
-
-The shifternoumi-setup executables bundle OpenOCD (GPL-2.0-or-later), unmodified
-(see [THIRD-PARTY-NOTICES](../Wizard/THIRD-PARTY-NOTICES.md)). Before
-publishing them, make each release meet the GPL's source requirement, for
-example by attaching the xPack OpenOCD source archive to the release.
-
 ## Debug build size
 
-The debug build of the app is 53.8 KB for 59.4 KB available behind the
-bootloader (Oct 2026). Release builds (`-Os`, 27.5 KB) are what ships; if
+The debug build of the app is 53,972 bytes for 59,384 available behind the
+bootloader (Oct. 2026). Release builds (`-Os`, 27,584 bytes) are what ships; if
 the debug build stops fitting, build it with `-Og` or drop the slow-path
 leftovers listed under *Dead or duplicated code*.

@@ -254,6 +254,12 @@ class InstallTest(unittest.TestCase):
         self.assertIn("ONE source only", out)
         self.assertIn("at least the 3.3V wire", out)
 
+    def test_first_install_says_as_is(self):
+        out = self.install(FakeChip(chip()))
+        self.assertIn('"AS IS"', out)
+        self.assertIn("declines all responsibility", out)
+        self.assertNotIn('"AS IS"', self.install(FakeChip(chip()), check=True))
+
     def test_check_writes_nothing(self):
         for protected in (False, True):
             fake = FakeChip(chip(read_protected=protected))

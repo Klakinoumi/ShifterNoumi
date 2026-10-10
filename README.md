@@ -22,13 +22,19 @@ previously dropped (direct 6→5, quick 4→3→4, deep sequential downshifts) n
 reach the game. See [Algorithms → fast path](docs/algorithms.md#the-fast-path).*
 
 > **Project status — read before flashing.** Validated on the author's unit
-> (Oct 2026): H-pattern, reverse, sequential, mode switching and the saved
+> (Oct. 2026): H-pattern, reverse, sequential, mode switching and the saved
 > mode, the low-latency path in game (13 ms median from the lever reaching the
 > gate to the gear in Assetto Corsa), guided calibration with its checks, the
 > USB bootloader and `shifternoumi-setup` (update, recovery, install through an
-> ST-Link, including from a read-protected chip). Only one physical unit
-> has been tested so far; other
-> production batches may differ. See [Known issues](docs/known-issues.md).
+> ST-Link, including from a read-protected chip). Only one physical unit has
+> been tested so far; other production batches may differ. See
+> [Known issues](docs/known-issues.md).
+
+> **Provided "AS IS", without warranty of any kind.** Flashing this firmware
+> erases the stock firmware for good, and opening, wiring and flashing the
+> shifter can damage it, your ST-Link or your PC. You do it at your own risk:
+> the author accepts no responsibility for any damage or loss (see sections 7
+> and 8 of the [Apache License 2.0](LICENSE)).
 
 ## How it works, in one paragraph
 
@@ -74,7 +80,8 @@ mode-switch and calibration gestures. Details in
 | [Contributing](CONTRIBUTING.md) | Contributors | Workflow, conventions, what to test |
 
 Code comments (French) sometimes refer to `PLAN.md` or `PCB/…`: those live in
-the development archive (a separate repository: day-by-day journal `PLAN.md`, Python prototypes, every capture recorded during development).
+the development archive, a separate repository holding the day-by-day journal,
+the Python prototypes and every capture recorded during development.
 
 ## Repository layout
 
@@ -87,7 +94,7 @@ Firmware/            Production firmware (STM32CubeIDE project)
   Middlewares/       ST USB device library (with small, marked edits)
   Makefile           Command-line build (no IDE), with or without bootloader
 Bootloader/          4 KB USB (HID) bootloader for updates without an ST-Link
-Wizard/             shifternoumi-setup: installer/updater (Python, packaged per OS)
+Wizard/              shifternoumi-setup: installer/updater (Python, packaged per OS)
 Diag/Gx100_DiagFirm/ Minimal diagnostic firmware used to map the sensors
 hardware/
   kicad/             Schematic of the stock board as reverse-engineered (KiCad)
@@ -104,8 +111,12 @@ released under the [Apache License 2.0](LICENSE): use it, change it, share it,
 sell it, keeping the license and the [NOTICE](NOTICE). Copyright 2026
 Klakinoumi.
 
+It is provided **"AS IS", without warranty of any kind**, and the author
+declines all responsibility for any damage or loss resulting from its use
+(sections 7 and 8 of the license).
+
 Third-party code keeps its own terms: the ST HAL and CMSIS under
 `Firmware/Drivers/` (see the `LICENSE.txt` files there), the ST USB device
 library under `Firmware/Middlewares/` (ST's SLA0044: use on ST microcontrollers
-only), and what the
-installer executables bundle ([THIRD-PARTY-NOTICES](Wizard/THIRD-PARTY-NOTICES.md)).
+only), and what the installer executables bundle
+([THIRD-PARTY-NOTICES](Wizard/THIRD-PARTY-NOTICES.md)).

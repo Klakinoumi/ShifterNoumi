@@ -2,8 +2,8 @@
 
 Why the firmware looks the way it does: the key decisions, in order, and the
 approaches that were tried and dropped. The full day-by-day journal (French,
-`PLAN.md`) is in the development archive (a separate repository: day-by-day journal `PLAN.md`, Python prototypes, every capture recorded during development); this page is the short version for
-reviewers.
+`PLAN.md`) is in the development archive, a separate repository; this page is
+the short version for reviewers.
 
 ## Goal and constraints
 
@@ -81,6 +81,14 @@ This took the most iterations.
    flash one by one, so a mistake was permanent; now unplugging mid-way
    cancels the session, and a calibration costs one flash slot instead of
    nine.
+6. **Obviously wrong points are refused** (Oct. 2026): a lever left in
+   neutral or on a position already recorded, and shift up / shift down
+   swapped. A first version only caught a lever that had not moved; a field
+   session with neutral taken back in 1st (157 from the first reading) led to
+   the current thresholds, then a second session with five deliberate
+   mistakes got five refusals. A calibration reset over USB
+   (`shifternoumi-setup reset-calibration`) replaced erasing the page with
+   STM32CubeProgrammer.
 
 The mode (H / SEQ) is also remembered across plug-ins, in a page of its own
 so that erasing it can never touch the calibration.
@@ -149,11 +157,22 @@ to register.
    recovered. Validated in game in Oct 2026: 13 ms median from the lever
    reaching the gate to the gear in Assetto Corsa, no shift missed.
 
-## Distribution (Sept 2026)
+## Distribution (Sept.–Oct. 2026)
 
 Goal: other owners should not need an IDE. A 4 KB USB HID bootloader (written
 from scratch) sits in front of the app so that updates need only the
 shifter's cable; the first install still needs an ST-Link, because the F103's
-ROM bootloader has no USB. `shifternoumi-setup` (Windows and Linux) wraps both, and
-GitHub Actions builds the release files. All of it is tested on a PC only so
-far; see [USB bootloader](bootloader.md).
+ROM bootloader has no USB. `shifternoumi-setup` (Windows and Linux) wraps both,
+and GitHub Actions builds the release files.
+
+Everything was then validated on hardware, one step at a time
+([USB bootloader → Hardware validation](bootloader.md#hardware-validation)).
+The read-protected case found two installer bugs: the flash size cannot be
+read while the chip is protected, and OpenOCD's protection removal did not
+erase the flash, so the installer now erases it itself. The installer also
+learned to name the firmware it sees on USB, to refuse to run with the board
+powered by both USB and the ST-Link, and to say plainly when it waits for
+the user.
+
+In October 2026 the firmware was named **ShifterNoumi** and released under
+the Apache License 2.0.

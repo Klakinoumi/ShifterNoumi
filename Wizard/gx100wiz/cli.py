@@ -30,10 +30,19 @@ WIRING = """
   SWCLK    ----->  CLK  (DCLK)
   GND      ----->  GND
 
+  If it is easier, lift the Blue Pill out of its socket to wire it, and put
+  it back the same way round before plugging the USB cable.
+
   !! Power the board from ONE source only. Keep the shifter's USB cable
   !! unplugged while the ST-Link is wired to the board, and remove the
   !! ST-Link wires (at least 3.3V) before plugging the USB cable back in.
 """
+
+AS_IS = """
+   ShifterNoumi is provided "AS IS", without warranty of any kind (Apache
+   License 2.0, sections 7 and 8). Opening, wiring and flashing the shifter
+   can damage it, the ST-Link or the PC: you do it at your own risk, and the
+   author declines all responsibility for any damage or loss."""
 
 ONE_SOURCE = ("Never power the board from the USB cable and the ST-Link's 3.3V at the same "
               "time: two supplies on the same 3.3V line, or the board feeding an unplugged "
@@ -182,6 +191,7 @@ def cmd_install(args) -> None:
         say("Checking the ST-Link connection (nothing is written)")
     else:
         say(f"First install of ShifterNoumi {firmware_version(fw)} ({hex_path.name})")
+        say(AS_IS)
     # Identify the firmware while the shifter may still be on USB: once
     # read-protected, the chip cannot tell through the ST-Link.
     seen = device.firmware_on_usb()

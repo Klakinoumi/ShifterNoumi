@@ -8,7 +8,8 @@ this was reverse-engineered from one unit; see the
 
 - **MCU module**: STM32F103C8T6 "Blue Pill" (72 MHz Cortex-M3, 64 KB flash,
   20 KB RAM, no FPU) with an 8 MHz crystal, USB-C, reset button and BOOT0
-  jumper. It plugs into a custom black carrier PCB.
+  jumper. It plugs into a socket on a custom black carrier PCB, so it can be
+  lifted out (to reach its pins more easily when flashing, for example).
 - **Sensors**: six linear Hall-effect sensors marked `49E` (SM353LT / AH49E
   family, analog output around VCC/2 at rest), referenced **U2–U7**, arranged
   around a cut-out. A magnet fixed under the lever moves above them.
@@ -52,12 +53,12 @@ it.
 
 The stock firmware is protected at **RDP level 1**: the flash cannot be read
 through SWD. Dropping to level 0 is needed before flashing anything. With
-STM32CubeProgrammer (Phase 1) it erased the whole flash; with OpenOCD's
-`stm32f1x unlock` on the same unit (Oct 2026) it did **not** (calibration
-and saved mode survived), so `shifternoumi-setup install` erases the whole flash
-itself afterwards. Either way the stock firmware is gone for good and cannot
-be backed up.
-The procedure is in [Building and flashing](building-and-flashing.md#1-remove-the-read-protection-one-time).
+STM32CubeProgrammer (the first time, on the stock firmware) it erased the
+whole flash; with OpenOCD's `stm32f1x unlock` on the same unit (Oct. 2026) it
+did **not** (calibration and saved mode survived), so
+`shifternoumi-setup install` erases the whole flash itself afterwards. Either
+way the stock firmware is gone for good and cannot be backed up. The
+procedure is in [Building and flashing](building-and-flashing.md#1-remove-the-read-protection-one-time).
 
 ## The stock USB device (for reference)
 

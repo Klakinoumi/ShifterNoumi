@@ -8,9 +8,16 @@ cable alone (see [Updating](#updating)).
 > this one **erases it for good**: nobody can back it up or put it back.
 > The shifter will then only run this firmware.
 
-> The installer has only been tested on a PC so far, never end to end on
-> a shifter. Until it has, keep STM32CubeProgrammer at hand
-> ([Building and flashing](building-and-flashing.md)) in case a step fails.
+> **Provided "AS IS", without warranty of any kind.** Flashing this firmware
+> erases the stock firmware for good, and opening, wiring and flashing the
+> shifter can damage it, your ST-Link or your PC. You do it at your own risk:
+> the author accepts no responsibility for any damage or loss (see sections 7
+> and 8 of the [Apache License 2.0](../LICENSE)).
+
+The installer was validated end to end on the author's shifter (Oct. 2026,
+[details](bootloader.md#hardware-validation)). If a step ever goes wrong, the
+ST-Link can always recover the shifter: see
+[Building and flashing](building-and-flashing.md).
 
 ## What you need
 
@@ -35,12 +42,11 @@ download the latest **shifternoumi-setup** for your system:
 The installer is a single file with the firmware built in. You don't need to
 install anything else on Linux.
 
-> **No release has been published yet.** Until there is one, the installer
-> is only available as a test build: on the project's
-> [Actions page](https://github.com/Klakinoumi/ShifterNoumi/actions), open
-> the latest green *build* run and download `shifternoumi-setup-Windows` or
-> `shifternoumi-setup-Linux` under *Artifacts* (a zip with the executable inside;
-> you must be signed in to GitHub).
+Test builds of every change are also on the project's
+[Actions page](https://github.com/Klakinoumi/ShifterNoumi/actions): open a
+green *build* run and download `shifternoumi-setup-Windows` or
+`shifternoumi-setup-Linux` under *Artifacts* (you must be signed in to
+GitHub). They are kept 7 days and are not releases.
 
 ## 2. Windows only: the ST-Link driver
 
@@ -64,8 +70,14 @@ The shifter itself needs no driver.
    > enough: remove its wires from the board. The installer refuses to
    > start while the shifter is plugged in over USB.
 2. Open the base and find the **Blue Pill**: the small blue board with the
-   USB-C socket, plugged onto the black main board.
-   <!-- TODO: photo of the opened base, screws to remove -->
+   USB-C socket, plugged onto the black main board (see the
+   [photos](../hardware/photos/)).
+
+   If you prefer, you can lift the Blue Pill out of its socket for easier
+   access to its pins: it is only plugged in, and the ST-Link powers it on
+   its own. It is up to you. Note which way it was inserted before removing
+   it, and put it back the same way, fully seated, before plugging the USB
+   cable for the live check.
 3. At the end of the Blue Pill, opposite the USB-C socket, there are 4 pins
    marked `3V3`, `IO` (or `DIO`), `CLK` (or `DCLK`) and `GND`. Connect them to
    the ST-Link pins that carry the same names:
@@ -80,7 +92,6 @@ The shifter itself needs no driver.
    Don't use the ST-Link's 5V pin. The pin order printed on ST-Link clones
    differs from one model to another, so go by the labels, not the
    positions.
-   <!-- TODO: photo of the 4 wires on the SWD header -->
 
 ## 4. Run the installer
 
@@ -90,7 +101,7 @@ connection**: it shows the ST-Link, the board voltage and what the chip
 contains, and writes nothing. Then choose **1 First install**.
 
 If the shifter is still plugged in over USB when you start, the installer
-first says which firmware it runs (stock or community: the chip itself
+first says which firmware it runs (stock or ShifterNoumi: the chip itself
 cannot tell once read-protected), then asks you to unplug it before wiring
 the ST-Link.
 
@@ -98,11 +109,14 @@ The installer then:
 
 1. **Shows the wiring** and waits for Enter.
 2. **Connects to the chip**, and reads the board voltage (about 3.3 V) and
-   the flash size (64 KB). If the first attempt fails, it retries at a lower
+   the flash size (64 KB; hidden while the chip is read-protected, as with
+   the stock firmware). If the first attempt fails, it retries at a lower
    speed, which is normal with long wires.
-3. **Asks you to type `ERASE`.** This is the point of no return described
-   at the top. Type it in capitals and press Enter. The installer removes
-   the protection and erases the whole chip, which takes a few seconds.
+3. **Asks you to type `ERASE`** if the chip is read-protected (the stock
+   firmware). This is the point of no return described at the top. Type it
+   in capitals and press Enter; anything else stops without changing
+   anything. The installer removes the protection and erases the whole
+   chip, which takes a few seconds.
 4. **Writes the firmware and checks it.** It also locks the small USB
    updater (the bootloader) so that no later update can damage it.
 5. **Asks you to swap cables.** Remove the ST-Link wires from the Blue
@@ -117,7 +131,8 @@ The installer then:
    ```
 
    When every position has been seen, the installer says *All positions
-   detected* and you are done.
+   detected* and you are done. Each time the installer waits for you to do
+   something, it says so on a line starting with `>>> YOUR TURN`.
 
 If a position never shows up, don't worry yet: the firmware starts with a
 default calibration measured on another shifter, and the next step fixes
@@ -170,6 +185,7 @@ ones:
 
 | Message | What to do |
 |---|---|
+| *The shifter is plugged in over USB* | Unplug the shifter's USB cable: the board must be powered by the ST-Link only |
 | *No ST-Link found* | Plug the ST-Link in, or try another USB port |
 | *The ST-Link is in use by another program* | Close STM32CubeProgrammer or STM32CubeIDE |
 | *Windows has no driver for it* | Install the driver ([step 2](#2-windows-only-the-st-link-driver)) |
@@ -177,6 +193,7 @@ ones:
 | *The ST-Link reads 0.0 V on the board* | The 3.3V wire is missing or on the wrong pin |
 | *The ST-Link cannot talk to the chip* | SWDIO and SWCLK are probably swapped. Also check GND |
 | *The protection is still on* | Unplug the ST-Link from the PC for a few seconds, then run the install again |
+| *The chip did not answer after the erase* | Same: unplug the ST-Link from the PC for a few seconds and run the install again; it carries on where it stopped |
 | *The shifter did not appear on USB* | Use another USB cable (the one you have may only charge) or another port |
 | *The shifter … has no USB bootloader* | It was installed without one. Run the first install once more with the ST-Link |
 

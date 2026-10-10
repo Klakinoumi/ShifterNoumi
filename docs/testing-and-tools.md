@@ -31,12 +31,12 @@ ok    test_replay sequentielle_organique_log.txt
 
 | Test | What it checks |
 |---|---|
-| `test_calibration_flash` | Slot rotation, CRC rejection, highest-sequence-wins, erase on wrap, a save interrupted by a power cut. Flash is simulated in RAM with real semantics (programming can only clear bits, erase sets 0xFF) |
-| `test_calibration_mode` | Calibration mode end to end through the state machine: a session interrupted after 5 points changes nothing (RAM or flash); a complete one applies all nine points and writes exactly one flash slot, which reloads identically |
+| `test_calibration_flash` | Slot rotation, CRC rejection, highest-sequence-wins, erase on wrap, a save interrupted by a power cut, the calibration reset. Flash is simulated in RAM with real semantics (programming can only clear bits, erase sets 0xFF) |
+| `test_calibration_mode` | Calibration mode end to end through the state machine: a session interrupted after 5 points changes nothing (RAM or flash); a complete one applies all nine points and writes exactly one flash slot, which reloads identically; refused points (neutral, duplicates, a gate taken again, seq ± swapped) and the thresholds around them; real sessions replayed with their expected accepted/refused counts |
 | `test_collar_switch` | Debounce (isolated bounce rejected, edges confirmed after 2 reads), and the GPIO read through a stub |
 | `test_hid_report` | Slow-path report building: gear latch until neutral, reverse latch, shift pulses, debug byte, raw axes |
 | `test_mode_flash` | Saved mode: blank page, no rewrite when unchanged, interrupted record, erase after 512 records, foreign page content |
-| `test_status_led` | LED patterns: breath then *n* pulses for the expected calibration point, saved/ready/mode-switch flashes, software PWM duty |
+| `test_status_led` | LED patterns: breath then *n* pulses for the expected calibration point, saved/ready/refused/mode-switch patterns, software PWM duty |
 | `test_debug_trace` | CDC line format: header and line column counts, `fast_pos`/`buttons` columns, `CAL` line content and timing |
 | `test_fast_gear` | Fast path: engage/release timing, spike rejection, seq ± in SEQ mode only, no phantom shift + from a noisy neutral, seq − never engaging 3rd in H mode, 6th not sent after a mode switch, one pulse per push, two quick pushes → two pulses, calibration-entry mask, reference points following a recalibration. Also replays any `*_cdc.csv` given as arguments |
 | `test_replay` | Replays a Phase-4 log (`T … HALL … COLLAR …` format) through the state machine, prints emitted movements and mode switches, and checks their counts |
@@ -85,11 +85,10 @@ Limits:
 - interpolation between 100 ms samples is an approximation of what the board
   sees;
 - older captures have no `_cal.csv`, so they replay with the **default**
-  calibration; those recorded after a recalibration (`test_H_pattern4/6/7`,
-  `test_H_pattern`, `test1`, `test_Ben`) replay unreliably. Before trusting
-  such a capture, compare its replayed
-  `slow_buttons` with the recorded `*_hid.csv`: they should match almost
-  everywhere (99.7–99.9 % on `sync_assetto2`/`3`).
+  calibration, and those recorded after a recalibration replay unreliably.
+  Before trusting such a capture, compare its replayed `slow_buttons` with
+  the recorded `*_hid.csv`: they should match almost everywhere (99.7–99.9 %
+  on the in-game sessions of the development archive).
 
 ### `plot_fast_path.py` — the before/after figure
 
@@ -141,6 +140,22 @@ started after the capture.
 This is how the "missed shift" investigation was done: firmware state, what
 the PC received, and what the game accepted, side by side.
 
+### `analyze_shift_latency.py`
+
+Measures what the driver feels, on a session recorded with
+`capture_session.py` while playing Assetto Corsa:
+
+```sh
+.venv/Scripts/python.exe tools/analyze_shift_latency.py my_session
+```
+
+The HID file logs every report (1 ms) with the raw sensor values, so the
+script knows when the lever entered the gate (same normalization as the
+firmware, calibration from `my_session_cal.csv`). It prints, per session:
+lever in gate → button (firmware), button → gear in the game, lever → gear
+(what you feel), the slowest shifts, buttons the game ignored, and any lever
+held in a gate without a button (a shift missed by the firmware).
+
 ### `hall_diag_stream.py`
 
 For the **diagnostic firmware** (`Diag/Gx100_DiagFirm`) only. It streams the
@@ -165,5 +180,5 @@ Only the captures the host tests replay are here:
 Every other capture recorded during development (sensor mapping, field tests,
 in-game Assetto Corsa sessions with game gear and pedals, the stock device's
 HID characterisation), the stock-device scripts and the Python prototypes the
-C code was ported from are kept in the development archive (a separate repository: day-by-day journal `PLAN.md`, Python prototypes, every capture recorded during development).
-`plot_fast_path.py` needs those captures to redraw its figure.
+C code was ported from are kept in the development archive, a separate
+repository. `plot_fast_path.py` needs those captures to redraw its figure.

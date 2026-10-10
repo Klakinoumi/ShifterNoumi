@@ -55,7 +55,7 @@ on real captures at the 100 ms cadence. Re-validate with the replay tools
 
 | Constant | Value | Meaning |
 |---|---|---|
-| `COLLAR_DEBOUNCE_STEPS` | 2 | Consecutive identical reads needed to change state. Applied at both rates: ≈100–200 ms on the slow debouncer, ≈4 ms on the fast one |
+| `COLLAR_DEBOUNCE_STEPS` | 2 | Consecutive identical reads needed to change state. Applied at both rates: 100–200 ms on the slow debouncer, 1–2 ms on the fast one |
 
 ## Movement tracker — `App/Inc/mode_state_machine.h`
 
@@ -104,6 +104,7 @@ listed in [Hardware](hardware.md#what-each-position-looks-like-to-the-sensors).
 | `STATUS_LED_NEUTRAL_ON_MS` | 1000 | Single long pulse for neutral |
 | `STATUS_LED_FLASH_MS` / `_COUNT` | 80 / 3 | Point-saved flash |
 | `STATUS_LED_SWITCH_MS` / `_COUNT` | 100 / 2 | Mode-switched flash |
+| `STATUS_LED_REJECT_MS` / `_COUNT` | 50 / 10 | Point-refused flicker (1 s) |
 | `STATUS_LED_HOLD_BLIP_MS` / `_GAP_MS` / `_REST_MS` | 100 / 150 / 500 | "Ready to save" double-blip pattern |
 | `STATUS_LED_MIN_LEVEL` | 16 | Brightness (0–255) below which the software PWM switches the LED off rather than flicker |
 

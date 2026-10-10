@@ -10,7 +10,7 @@ or changing the descriptors.
 |---|---|---|
 | VID | `0x0483` (STMicroelectronics) | `USB_DEVICE/App/usbd_desc.c` |
 | PID | `0x572C` | same |
-| Manufacturer / Product | `GX100 Project` / `GX100` | same |
+| Manufacturer / Product | `ShifterNoumi` / `ShifterNoumi` | same |
 | Device class | `0xEF / 0x02 / 0x01` (Miscellaneous, Interface Association) | same — required for the CDC pair to bind as one COM port |
 | Speed | Full speed (12 Mbit/s) | |
 | Serial number | derived from the MCU unique ID (ST default) | `usbd_desc.c` |

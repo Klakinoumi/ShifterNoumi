@@ -19,5 +19,8 @@ The full license texts of OpenOCD and the libraries it is built with are
 inside the executable, under `openocd/distro-info/licenses/`, as shipped by
 the xPack project.
 
-OpenOCD is distributed unmodified. Its complete source code is available from
-the xPack OpenOCD release linked above.
+OpenOCD is distributed unmodified. Each GitHub release of ShifterNoumi has the
+corresponding source code attached, as `third-party-source-*` archives: OpenOCD at
+the exact commit the xPack binary was built from (`e5888bda3`, upstream
+openocd-org/openocd), the xPack build scripts (`v0.12.0-7`), and libusb,
+hidapi, libftdi1 and libiconv in the versions listed above.

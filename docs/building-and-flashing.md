@@ -5,8 +5,18 @@ time.
 
 > **Point of no return.** The stock GX100 firmware is read-protected (RDP
 > level 1). Removing the protection, which you must do to flash anything,
-> **mass-erases the chip**. The stock firmware cannot be backed up or restored
-> afterwards.
+> destroys it: STM32CubeProgrammer erases the chip when it lowers the
+> protection, and `shifternoumi-setup install` erases it explicitly. The stock
+> firmware cannot be backed up or restored afterwards.
+
+> **Provided "AS IS", without warranty of any kind.** Flashing this firmware
+> erases the stock firmware for good, and opening, wiring and flashing the
+> shifter can damage it, your ST-Link or your PC. You do it at your own risk:
+> the author accepts no responsibility for any damage or loss (see sections 7
+> and 8 of the [Apache License 2.0](../LICENSE)).
+
+Most users do not need this page: [Installation](installation.md) does all of
+it with one program. This page is for building from source.
 
 ## What you need
 
@@ -23,12 +33,15 @@ time.
 1. Wire the ST-Link to the SWD header: `3V3`, `SWDIO`, `SWCLK`, `GND`, with
    the shifter's USB cable unplugged: the ST-Link powers the board. Never
    have both connected at once (two supplies on the same 3.3V line); remove
-   the ST-Link wires before plugging USB back in.
+   the ST-Link wires before plugging USB back in. The Blue Pill can be lifted
+   out of its socket for easier access if you prefer (put it back the same
+   way round).
 2. Open STM32CubeProgrammer, select *ST-LINK*, click *Connect*. If it fails,
    set *Mode* to *Under reset* and retry, holding the Blue Pill's reset button
    while clicking *Connect*.
 3. Go to *Option bytes (OB)* → *Read Out Protection* → set **RDP = AA
-   (Level 0)** → *Apply*. The chip mass-erases itself. This is expected.
+   (Level 0)** → *Apply*. The chip is erased (it was on the reference
+   unit). This is expected.
 4. Disconnect.
 
 Skipping this step makes the first flash from CubeIDE fail with *failed to
@@ -68,7 +81,7 @@ It needs `arm-none-eabi-gcc` and `make` on `PATH`. The ones bundled with
 CubeIDE work, under `STM32CubeIDE/plugins/*gnu-tools-for-stm32*/tools/bin`
 and `*externaltools.make*/tools/bin`. Before the bootloader work,
 `CONFIG=debug LAYOUT=standalone` was checked byte-identical to CubeIDE's Debug
-build. The release build is half the size (27 KB vs 53 KB).
+build. The release build is half the size (27.6 KB vs 54 KB).
 
 `LAYOUT=bootloader` output only runs behind the USB bootloader; see
 [USB bootloader and shifternoumi-setup](bootloader.md) for the bootloader itself,
@@ -76,17 +89,29 @@ the release files and the installer.
 
 GitHub Actions (`.github/workflows/build.yml`) runs every host test, builds
 the bootloader and the firmware, packages the release files and builds
-shifternoumi-setup for Windows and Linux on every push. Pushing a tag `vX.Y.Z`
-creates a draft Release with all of it attached.
+shifternoumi-setup for Windows and Linux on every pull request and every push
+to `main`. Pushing a tag `vX.Y.Z` creates a draft Release with all of it
+attached, plus the source code of the third-party software the installer
+bundles.
 
 ## 3. Flash
 
 With the ST-Link connected: *Run → Run* (or the launch configuration
 `Gx100_Firmware.launch`). CubeIDE builds, downloads and resets the board.
 
+The CubeIDE build is linked at `0x08000000`, **without the USB bootloader**
+(like `LAYOUT=standalone`): it replaces the bootloader, so USB updates stop
+working until the next `shifternoumi-setup install`. On a shifter installed
+with `shifternoumi-setup`, the bootloader pages are write-protected and
+CubeIDE's download fails; remove that protection first in
+STM32CubeProgrammer (*Option bytes* → *Write protection*, untick pages 0–3),
+or let the installer do it: `shifternoumi-setup install --standalone` writes
+the standalone app, `shifternoumi-setup install` puts the bootloader back.
+Neither touches the calibration.
+
 Then plug the shifter's USB-C into the PC. Device Manager should show:
 
-- *Human Interface Devices* → a HID game controller, and *GX100* in
+- *Human Interface Devices* → a HID game controller, and *ShifterNoumi* in
   *Set up USB game controllers* (`joy.cpl`);
 - *Ports (COM & LPT)* → a *USB Serial Device (COMx)* — the debug stream.
 
@@ -141,7 +166,9 @@ debug approach. It is harmless (PB3 is not used).
 sensors before the real firmware existed. It exposes only a CDC port that
 prints `T <ms> HALL <u2> … <u7> COLLAR <0|1>` every 100 ms (read by
 `tools/hall_diag_stream.py`). Use it to inspect a unit that behaves
-very differently from the reference one. Build and flash it the same way.
+very differently from the reference one. Build and flash it the same way
+(it replaces ShifterNoumi and its bootloader, like any CubeIDE build; run
+`shifternoumi-setup install` afterwards to go back).
 
 ## Troubleshooting
 

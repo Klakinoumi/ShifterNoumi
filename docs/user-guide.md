@@ -102,10 +102,6 @@ Each step must follow the previous one within 5 s.
 If the target mode is already active, the gesture does nothing (and the LED
 does not flash).
 
-> While switching **to** H-pattern, the game sees 6th gear, because the
-> firmware is still in H-pattern mode while you hold it. Do it with the car
-> stopped or the clutch in.
-
 ## Calibration
 
 Calibration teaches the firmware where each position is on *your* unit.
@@ -165,10 +161,12 @@ calibration mode ends by itself and the LED goes off.
 The firmware refuses a point that is obviously wrong: the lever still in
 neutral (for points 1 to 8), on a position already recorded in this
 session (you forgot to move the lever, or went back to a gear already
-done), or shift up and shift down swapped. The LED then flickers fast for one second instead of
-flashing 3 times, and shows the same point again. Move the lever to the
-right position and record it again. It cannot tell two different gears
-apart, so check the pulse count before each point.
+done), or shift up and shift down swapped. The LED then flickers fast for
+one second instead of flashing 3 times, and shows the same point again. Move
+the lever to the right position and record it again. It cannot tell whether
+the lever is in the requested gear when that gear has not been recorded yet
+(4th at the 3rd step is accepted), so check the pulse count before each
+point.
 
 > Nothing is saved until the ninth point: the new calibration is written to
 > flash in one go at the end. If you make a mistake, **unplug the shifter**
@@ -186,16 +184,16 @@ The Blue Pill's on-board LED is off during normal driving.
 | Slow breath, then *n* pulses | Calibration mode, waiting for point *n* (1–6 = gears, 7 = shift up, 8 = shift down; one long pulse = neutral) |
 | Double blip, repeating | Collar held long enough — release to record this point |
 | 3 fast flashes | Point recorded, moving to the next one (after point 9: calibration saved) |
-| Fast flicker for 1 s | Point refused (lever in neutral, or on a position already recorded): same point again |
+| Fast flicker for 1 s | Point refused (lever in neutral, on a position already recorded, or shift up/down swapped): same point again |
 | Double flash, then off | Mode switch applied (H-pattern ↔ sequential) |
 | Fast blink, 5 Hz | Update mode (USB bootloader): waiting for `shifternoumi-setup`. Unplug and replug to leave it |
 | On for up to 3 s at plug-in | You plugged in with the collar lifted: the bootloader is watching for the [recovery gesture](#updating-the-firmware) |
 
 ## Updating the firmware
 
-Once the firmware has been installed with `shifternoumi-setup install` ([Installation](installation.md)) (which puts
-a USB bootloader on the shifter), updates need only the USB cable: run
-`shifternoumi-setup update`. Your calibration is kept. On Linux, run
+Once the firmware has been installed with `shifternoumi-setup install`, which
+also puts a USB bootloader on the shifter (see [Installation](installation.md)),
+updates need only the USB cable: run `shifternoumi-setup update`. Your calibration is kept. On Linux, run
 `shifternoumi-setup udev --install` once first.
 
 If an update is interrupted, the shifter stays in update mode (fast blinking
@@ -221,10 +219,10 @@ to-sequential gesture the two downshifts must be quick taps.
 
 **I saved a calibration point on the wrong position.** If calibration is
 still running, unplug the shifter: nothing is saved before the ninth point.
-Otherwise run the whole calibration again. If calibration mode cannot be entered any more because
-gears are no longer recognised, run `shifternoumi-setup reset-calibration` (menu
-option 6): the shifter erases its calibration and restarts on the built-in
-defaults, then calibrate again.
+Otherwise run the whole calibration again. If calibration mode cannot be
+entered any more because gears are no longer recognised, run
+`shifternoumi-setup reset-calibration` (menu option 6): the shifter erases its
+calibration and restarts on the built-in defaults, then calibrate again.
 
 **Shifts register late, or not at all, and you end up breaking each shift
 down.** This was a firmware bug, not your driving: firmware before the fast
@@ -235,5 +233,5 @@ If you still see it with current firmware, record a session with
 `capture_session.py` and open an issue with the files.
 
 **The device is not detected.** Check the USB cable carries data, then check
-Device Manager for a *GX100* entry. If nothing appears after flashing, see
+Device Manager for a *ShifterNoumi* entry. If nothing appears after flashing, see
 [Building and flashing](building-and-flashing.md#troubleshooting).

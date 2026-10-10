@@ -15,7 +15,7 @@ without opening the case.
 ## Flash map
 
 The contract lives in `Firmware/App/Inc/gx100_boot.h`, shared by the
-bootloader, the app and the wizard (`Wizard/gx100wiz/layout.py` mirrors it;
+bootloader, the app and the installer (`Wizard/gx100wiz/layout.py` mirrors it;
 a test fails if they differ).
 
 | Address | Size | Content | Written by |
@@ -34,8 +34,8 @@ until the final COMMIT the app is invalid: **a cable pulled mid-update leaves
 the shifter in update mode, never half-flashed.** Running the update again
 recovers it.
 
-The release build is 27.1 KB and the debug build 53.3 KB (end of Sept 2026);
-both fit.
+The release build is 27,584 bytes and the debug build 53,972 bytes (Oct.
+2026), for 59,384 available; both fit.
 
 ## Entering the bootloader
 
@@ -51,7 +51,7 @@ not restore. It stays in **update mode** (LED blinking fast, 5 Hz) if:
 3. **Manual recovery: lift the collar, plug the USB cable in, release the
    collar and lift it again within 3 s.** The LED lights while the
    bootloader watches the collar. This is for an app that crashes before it
-   can answer the wizard.
+   can answer the installer.
 
    Merely holding the collar lifted at power-up does *not* enter update
    mode: a disconnected collar wire also reads "lifted" (PB1 has a pull-up),
@@ -102,9 +102,13 @@ shifternoumi-setup info            what is connected (ST-Link, chip, shifter) an
 shifternoumi-setup udev --install  Linux, once: USB permissions for the shifter and the ST-Link
 ```
 
-**install** (ST-Link, via OpenOCD): shows the wiring, connects (retrying at
-100 kHz), reads the chip state, and if the stock firmware's read protection is
-on, asks you to type `ERASE` before removing it. Then it lifts the
+**install** (ST-Link, via OpenOCD): if the shifter is plugged in over USB, says
+which firmware it runs (from its USB identity: a read-protected chip cannot
+be read through the ST-Link) and waits for the cable to be unplugged, since
+the board must be powered by one source only. Then it shows the wiring,
+connects (retrying at 100 kHz), reads the chip state (the flash size is
+hidden while the chip is read-protected), and if the read protection is on,
+asks you to type `ERASE` before removing it. Then it lifts the
 bootloader's write protection if set, erases the whole flash if the
 protection was on (removing it did not erase the flash on the reference
 unit with OpenOCD, Oct 2026), writes `gx100-full.hex`
@@ -125,12 +129,12 @@ with its gdb/tcl/telnet servers off (no Windows firewall prompt). `info` and
 `install --check` connect without resetting or halting the chip, so a
 running shifter keeps running. If OpenOCD reports an error during the
 read-protection removal, the chip's state is read again before giving up:
-the erase often went through anyway.
+the removal often went through anyway.
 
 **Windows driver.** The shifter and its bootloader need no driver. The
-ST-Link does: ST's driver (STSW-LINK009) or WinUSB installed with Zadig. The
-wizard detects the missing driver and says so; installing it automatically is
-[not done yet](known-issues.md).
+ST-Link does: ST's driver (STSW-LINK009); WinUSB installed with Zadig should
+also work but is untested. The installer detects a missing driver and says
+so; it does not install it ([known issues](known-issues.md)).
 
 **Linux.** `shifternoumi-setup udev --install` writes `/etc/udev/rules.d/60-gx100.rules`
 (access for the logged-in user to the shifter, its bootloader and ST-Links,
@@ -146,13 +150,14 @@ make -C Firmware LAYOUT=standalone  # app at 0x08000000, no bootloader (ST-Link 
 cd Wizard && python -m unittest discover -s tests -t .
 ```
 
-The wizard tests run the wizard's real update code against the bootloader's
+The installer tests run its real update code against the bootloader's
 real protocol code: `Bootloader/test/boot_proto_host` wraps `boot_proto.c`
 around a simulated flash kept in a file, behind stdin/stdout. They cover a
 full update, a power cut half-way then a retry, an image built for the wrong
 layout, and the actual release firmware.
 
-Release files (CI does this on every push; by hand from `Wizard/`):
+Release files (CI does this on every pull request and push to `main`; by hand
+from `Wizard/`):
 
 ```sh
 python -m gx100wiz.image package --boot ../Bootloader/build/gx100-bootloader.bin \
@@ -169,7 +174,8 @@ python build_exe.py --firmware ../dist --version v0.1.0 --out ../dist-exe
 | `gx100-bootloader.bin` | The bootloader alone |
 | `gx100-standalone.hex` | App without bootloader, at `0x08000000` |
 | `manifest.json` | Version, app length and CRC |
-| `shifternoumi-setup-<version>-windows.exe`, `-linux` | The wizard, with all of the above inside |
+| `shifternoumi-setup-<version>-windows.exe`, `-linux` | The installer, with all of the above inside |
+| `THIRD-PARTY-NOTICES.md`, `third-party-source-*` | Licenses and source code of what the installer bundles (source archives on releases only) |
 
 ## Hardware validation
 

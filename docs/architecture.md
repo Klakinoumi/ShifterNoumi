@@ -43,6 +43,7 @@ flowchart LR
         MF[mode_flash]
         DT[debug_trace]
         COMP[usbd_composite<br/>+ usbd_cdc_if]
+        BL[boot_link]
     end
 
     subgraph LOGIC[Pure logic — host-testable]
@@ -72,6 +73,8 @@ flowchart LR
     MSM --> DT
     DT --> COMP
     COMP --> USB
+    COMP --> BL
+    BL --> FLASH
     MSM --> SL
     SL --> LED
 ```
@@ -90,9 +93,9 @@ flowchart LR
 | `status_led` | LED patterns for calibration and mode switches, software PWM | yes | `test_status_led` |
 | `debug_trace` | One CSV line per slow step on the CDC port | via CDC | `test_debug_trace` |
 | `usbd_composite` | Custom USB class: HID gamepad + CDC-ACM in one device | yes | — |
-| `boot_link` | App side of the USB bootloader: D+ pulse at start-up, reboot into the bootloader on a CDC command ([bootloader](bootloader.md)) | yes | — (wizard tests cover the protocol) |
+| `boot_link` | App side of the USB bootloader: D+ pulse at start-up; on a CDC command, reboot into the bootloader ([bootloader](bootloader.md)) or erase the calibration and restart | yes | — (installer tests cover the protocol) |
 
-Source sizes (application only): `mode_state_machine.c` ~600 lines, every
+Source sizes (application only): `mode_state_machine.c` ~650 lines, every
 other module under 250.
 
 ## Boot sequence
@@ -142,7 +145,7 @@ sequenceDiagram
         L->>L: debug_trace_step() on slow steps, debug_trace_calibration_poll()
         L->>L: status_led_output()  (software PWM)
         L->>U: USBD_COMPOSITE_HID_SendReport()
-        L->>L: boot_link_poll()  (reboot into the bootloader if asked)
+        L->>L: boot_link_poll()  (bootloader or calibration reset, if asked)
         L->>L: wait for the next SysTick
     end
 ```
@@ -231,6 +234,8 @@ two kinds:
   page erase (~20 ms) once every 512 switches. It happens right after a
   switch, while the fast path is waiting for the lever to visit neutral
   anyway.
+- **Calibration reset** (`shifternoumi-setup reset-calibration`): one page
+  erase, immediately followed by a restart.
 
 ## Errors
 

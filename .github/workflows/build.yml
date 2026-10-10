@@ -55,7 +55,7 @@ jobs:
           done
           make -C Firmware -j"$(nproc)" CONFIG=debug LAYOUT=bootloader
 
-      - name: Wizard tests (against the real bootloader protocol and firmware)
+      - name: Installer tests (against the real bootloader protocol and firmware)
         working-directory: Wizard
         run: python3 -m unittest discover -s tests -t . -v
 
@@ -122,10 +122,24 @@ jobs:
         with:
           path: artifacts
           merge-multiple: true
+      # The installer bundles OpenOCD (GPL) and LGPL libraries: every release
+      # carries their source code. Versions must follow OPENOCD_VERSION in
+      # Wizard/build_exe.py and Wizard/THIRD-PARTY-NOTICES.md; e5888bda3 is
+      # the commit xPack OpenOCD 0.12.0-7 was built from ("openocd --version").
+      - name: Third-party source code
+        run: |
+          get() { curl -fsSL --retry 3 -o "artifacts/third-party-source-$1" "$2"; }
+          get openocd-e5888bda3.tar.gz https://github.com/openocd-org/openocd/archive/e5888bda38f4952e2ae92f7dc5b25fc9a2d1c2b3.tar.gz
+          get openocd-xpack-0.12.0-7.tar.gz https://github.com/xpack-dev-tools/openocd-xpack/archive/refs/tags/v0.12.0-7.tar.gz
+          get libusb-1.0.29.tar.bz2 https://github.com/libusb/libusb/releases/download/v1.0.29/libusb-1.0.29.tar.bz2
+          get hidapi-0.15.0.tar.gz https://github.com/libusb/hidapi/archive/refs/tags/hidapi-0.15.0.tar.gz
+          get libftdi1-1.5.tar.bz2 https://www.intra2net.com/en/developer/libftdi/download/libftdi1-1.5.tar.bz2
+          get libiconv-1.18.tar.gz https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.18.tar.gz
+          ls -l artifacts
       - name: Create draft release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "$GITHUB_REF_NAME" artifacts/* \
             --repo "$GITHUB_REPOSITORY" --draft --generate-notes \
-            --title "GX100 firmware $GITHUB_REF_NAME"
+            --title "ShifterNoumi $GITHUB_REF_NAME"

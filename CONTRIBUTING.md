@@ -7,11 +7,13 @@ take apart, so the workflow favours **recording once, replaying many times**.
 
 - **Behaviour changes come with evidence.** A change to classification,
   timing or gestures should be backed by a capture (`capture_session.py`)
-  replayed before and after (`replay_fast_path`, `plot_fast_path.py`).
-  Commit new captures to `captures/` with a descriptive name.
-- **Keep `App/` HAL-free.** Only `hall_sensors`, `collar_switch`,
-  `status_led`, `boot_link`, `calibration_flash` and `mode_flash` (writes) and `debug_trace` may touch the
-  hardware. New logic goes in a pure module with a host test.
+  replayed before and after (`replay_fast_path`), and for anything the driver
+  feels, an in-game session measured with `analyze_shift_latency.py`. Commit
+  new captures to `captures/` with a descriptive name.
+- **Keep `App/` HAL-free.** Only the adapters may touch the hardware:
+  `hall_sensors`, `collar_switch`, `status_led`, `boot_link`, `debug_trace`,
+  and the flash writes of `calibration_flash` and `mode_flash`. New logic
+  goes in a pure module with a host test.
 - **Don't retune slow-path constants casually.** Every slow-path timing was
   tuned on real 100 ms captures. The history of each value is in
   [Configuration reference](docs/configuration-reference.md) and
@@ -49,6 +51,6 @@ timings, LED), say whether you tested it on hardware, and with which game.
 Please attach:
 
 1. what you did and what you expected;
-2. a `capture_session.py` recording of it (the `_hid.csv`, `_cdc.csv` and
-   `.png` files);
+2. a `capture_session.py` recording of it (the `_hid.csv`, `_cdc.csv`,
+   `_cal.csv` and `.png` files);
 3. whether the unit has been recalibrated since flashing.

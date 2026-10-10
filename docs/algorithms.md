@@ -198,6 +198,14 @@ Caveat: the captures have one sample per 100 ms. The replay runs the fast path
 every 1 ms on values interpolated between samples, which approximates, but is
 not, what the board sees.
 
+Measured on hardware afterwards (Oct. 2026, Assetto Corsa, HID logged at 1 ms
+with the raw sensor values, `tools/analyze_shift_latency.py`): from the lever
+entering the gate (distance < 0.35) to the gear in the game, 13 ms median,
+56 ms for 90 % of shifts, no shift missed in 60 H-pattern shifts; 9 ms to the
+pulse in sequential (the game then adds the car's own ~95 ms shift time). The
+slowest H shifts (up to ~100 ms) are all 3rd: while the lever settles, it is
+not yet `FAST_GEAR_MARGIN` closer to 3rd than to seq −.
+
 ---
 
 ## 4. Mode-switch gestures
@@ -294,7 +302,8 @@ stored neutral. A lever put back in a gate already recorded lands up to
 ~160 from its first reading (`calib_refus`: neutral taken in 1st, 157), so
 the first threshold (150) missed it. The three clean sessions replay with
 nine points accepted and none refused; `calib_refus` with its four mistakes
-refused (`test_calibration_mode`).
+refused (`test_calibration_mode`). On hardware, a session with five
+deliberate mistakes got five refusals and nine correct points.
 
 The check catches a lever left in neutral, put back in a gate already
 recorded, or on the wrong side for seq + / seq −. It cannot tell whether
@@ -324,6 +333,8 @@ are a fixed table, and `neutral`/`scale` are recomputed at load.
 - **Endurance**: a full calibration is saved once (one slot), so the page is
   erased once every 8 calibrations. The F103 is rated for ~10 000 erase
   cycles.
+- **Reset**: `shifternoumi-setup reset-calibration` makes the app erase the
+  page and restart; with no valid slot, it loads the built-in defaults.
 - **Power loss**: a write interrupted by a power cut leaves a slot that is
   neither blank nor valid. The CRC keeps it from ever being loaded, and the
   next save skips every slot that is not fully blank (erasing the page if
