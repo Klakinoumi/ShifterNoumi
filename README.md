@@ -6,6 +6,10 @@ sensors). It turns the shifter into a standard USB gamepad that your sim sees
 immediately, and lets you do everything from the lever itself — no vendor PC
 software to launch before a session.
 
+[![ShifterNoumi presentation video on YouTube](https://img.youtube.com/vi/y1l9Ku8SqPg/maxresdefault.jpg)](https://youtu.be/y1l9Ku8SqPg)
+
+*Presentation video (YouTube): what ShifterNoumi does and how it is used.*
+
 | | Stock firmware | This firmware |
 |---|---|---|
 | Switch H-pattern ↔ sequential | Vendor PC app | Lever + collar gesture ([user guide](docs/user-guide.md#switching-between-h-pattern-and-sequential)) |
