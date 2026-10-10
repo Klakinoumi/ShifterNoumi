@@ -1,0 +1,14 @@
+ShifterNoumi
+Open firmware, USB bootloader and installer for the GX100 shifter.
+Copyright 2026 Klakinoumi
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This product includes third-party software, each under its own license:
+- STMicroelectronics STM32F1 HAL and CMSIS (Firmware/Drivers/, see the
+  LICENSE.txt files there).
+- STMicroelectronics STM32 USB device library (Firmware/Middlewares/), under
+  ST's SLA0044 license (use on ST microcontrollers only, see the file headers).
+- The shifternoumi-setup executables bundle xPack OpenOCD, libusb, hidapi,
+  pyserial, Python and the PyInstaller bootloader: see
+  Wizard/THIRD-PARTY-NOTICES.md.

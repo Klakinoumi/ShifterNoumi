@@ -1,0 +1,131 @@
+# Every push: host tests, bootloader + firmware builds, release files, and the
+# shifternoumi-setup executables for Windows and Linux.
+# Pushing a tag vX.Y.Z also creates a *draft* GitHub Release with all of it;
+# publish it by hand from the Releases page.
+name: build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  # Arm's build of the same GCC release that STM32CubeIDE 2.2 bundles
+  # (GNU Tools for STM32 14.3.rel1).
+  ARM_GCC_URL: https://developer.arm.com/-/media/Files/downloads/gnu/14.3.rel1/binrel/arm-gnu-toolchain-14.3.rel1-x86_64-arm-none-eabi.tar.xz
+  ARM_GCC_DIR: /opt/arm-gnu-toolchain-14.3
+
+jobs:
+  firmware:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Cache ARM toolchain
+        id: cache-gcc
+        uses: actions/cache@v5
+        with:
+          path: ${{ env.ARM_GCC_DIR }}
+          key: arm-gnu-toolchain-14.3.rel1-x86_64
+
+      - name: Install ARM toolchain
+        if: steps.cache-gcc.outputs.cache-hit != 'true'
+        run: |
+          sudo mkdir -p "$ARM_GCC_DIR"
+          curl -fsSL "$ARM_GCC_URL" | sudo tar -xJ --strip-components=1 -C "$ARM_GCC_DIR"
+
+      - name: Firmware host tests
+        run: sh Firmware/App/test/run_tests.sh
+
+      - name: Bootloader host tests
+        run: make -C Bootloader test
+
+      - name: Build bootloader and firmware
+        run: |
+          export PATH="$ARM_GCC_DIR/bin:$PATH"
+          arm-none-eabi-gcc --version | head -1
+          make -C Bootloader -j"$(nproc)"
+          for layout in bootloader standalone; do
+            make -C Firmware -j"$(nproc)" CONFIG=release LAYOUT=$layout
+          done
+          make -C Firmware -j"$(nproc)" CONFIG=debug LAYOUT=bootloader
+
+      - name: Wizard tests (against the real bootloader protocol and firmware)
+        working-directory: Wizard
+        run: python3 -m unittest discover -s tests -t . -v
+
+      - name: Package release files
+        working-directory: Wizard
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          [[ "$GITHUB_REF" == refs/tags/* ]] || VERSION="dev-${GITHUB_SHA::7}"
+          python3 -m gx100wiz.image package \
+            --boot ../Bootloader/build/gx100-bootloader.bin \
+            --app ../Firmware/build/release-bootloader/gx100-app.bin \
+            --standalone ../Firmware/build/release-standalone/gx100-app.bin \
+            --version "$VERSION" --out ../dist
+          cp ../Firmware/build/debug-bootloader/gx100-app.elf ../dist/gx100-app-debug.elf
+          (cd ../dist && sha256sum * > SHA256SUMS)
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: gx100-firmware
+          path: dist/
+          # Private repo: 500 MB of artifact storage on the free plan. Releases
+          # (tags) keep the files for good; run artifacts are for testing.
+          retention-days: 30
+
+  wizard:
+    needs: firmware
+    strategy:
+      matrix:
+        # Oldest supported Ubuntu: the Linux binary runs on newer glibc too.
+        os: [windows-2022, ubuntu-22.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v7
+        with:
+          name: gx100-firmware
+          path: dist
+      - name: Build shifternoumi-setup
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          [[ "$GITHUB_REF" == refs/tags/* ]] || VERSION="dev-${GITHUB_SHA::7}"
+          python -m pip install -r Wizard/requirements.txt
+          python Wizard/build_exe.py --firmware dist --version "$VERSION" --out dist-exe
+          cp Wizard/THIRD-PARTY-NOTICES.md dist-exe/
+          ./dist-exe/shifternoumi-setup-* info
+      - uses: actions/upload-artifact@v6
+        with:
+          name: shifternoumi-setup-${{ runner.os }}
+          path: dist-exe/
+          retention-days: 7  # ~37 MB per run with the firmware, see above
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [firmware, wizard]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          path: artifacts
+          merge-multiple: true
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" artifacts/* \
+            --repo "$GITHUB_REPOSITORY" --draft --generate-notes \
+            --title "GX100 firmware $GITHUB_REF_NAME"

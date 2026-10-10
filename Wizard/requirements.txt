@@ -1,0 +1,5 @@
+# shifternoumi-setup runtime (install in K_firm/.venv, see CONTRIBUTING.md)
+hidapi>=0.14
+pyserial>=3.5
+# Only to build the single-file executable (build_exe.py)
+pyinstaller>=6.0

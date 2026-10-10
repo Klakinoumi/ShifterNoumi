@@ -1,0 +1,28 @@
+# Environnement Python local (cf memoire : libs uniquement dans .venv)
+.venv/
+__pycache__/
+*.pyc
+
+# Sorties de build STM32CubeIDE
+Debug/
+Release/
+
+# Historique local KiCad (contient son propre depot git)
+hardware/kicad/.history/
+*-backups/
+*.lck
+
+# Rejeux 1ms regenerables par tools/plot_fast_path.py (~47MB)
+captures/fast_path_replay/
+
+*.log
+
+# Sorties du Makefile ligne de commande (Firmware/Makefile)
+Firmware/build/
+
+# Bootloader, paquets de release et assistant (shifternoumi-setup)
+Bootloader/build/
+dist/
+dist-exe/
+Wizard/build/
+Wizard/vendor/

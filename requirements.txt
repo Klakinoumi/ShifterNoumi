@@ -1,0 +1,5 @@
+# Python tools under tools/ (capture, streaming, plotting, analysis). Install in a venv:
+#   python -m venv .venv && .venv/Scripts/pip install -r requirements.txt   (Windows)
+pyserial>=3.5
+hidapi>=0.14
+matplotlib>=3.8
